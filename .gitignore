@@ -1,0 +1,5 @@
+env/
+songs/
+.env
+test.py
+*.mp3
