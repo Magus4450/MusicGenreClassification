@@ -1,10 +1,6 @@
-
-
-
-
 class APICall:
 
-    def __init__(self, genres, amount_each):
+    def __init__(self, genres, amount_each, num_youtube_api_keys=1):
         
         # Spotify API
         self.spotify_base_url = "https://api.spotify.com/v1"
@@ -19,11 +15,90 @@ class APICall:
         # Amount of songs to process
         self.amount_each = amount_each
 
+        # Number of API Key used
+        self.num_youtube_api_keys = num_youtube_api_keys
+
         # Dictionary of genres and their songs name
         self.song_list = {}
         # Dictionary of genres and their songs url
         self.song_url = {}
         
+        self.song_name_dir, self.song_url_dir = self._make_song_list_url_dir()
+
+    def _make_song_list_url_dir(self):
+        """Makes directory for song list and song url
+
+        Returns:
+            (str, str): song list directory, song url directory
+        """
+        import os
+        BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+        if not os.path.isdir(os.path.join(BASE_DIR, "Song List")):
+            os.mkdir(BASE_DIR + "\\Song List")
+
+        SONG_LIST_DIR = os.path.join(BASE_DIR, "Song List")
+
+        SONG_NAME_LIST_PATH = os.path.join(SONG_LIST_DIR, "name_list.txt")
+        SONG_URL_LIST_PATH = os.path.join(SONG_LIST_DIR, "url_list.txt")
+
+        return SONG_NAME_LIST_PATH, SONG_URL_LIST_PATH
+    
+    def _parse_song_url_from_text(self):
+        """Parses song name and url from text files
+
+        Returns:
+            (dict, dict): dict of song name and url with genre as keys
+        """
+        song_name = {}
+        song_url = {}
+
+        with open(self.song_name_dir, "r") as f:
+            text = f.read()
+        genre_list = text.split("--")
+        
+        for genre in genre_list[:-1]:
+            splitted = genre.split("\n")
+            genre_name = splitted[0].replace("GENRE=", "")
+            song_name[genre_name] = splitted[1:-2]   
+
+        with open(self.song_url_dir, "r") as f:
+            text = f.read()
+        genre_list = text.split("--")
+        
+        for genre in genre_list[:-1]:
+            splitted = genre.split("\n")
+            genre_name = splitted[0].replace("GENRE=", "")
+            song_url[genre_name] = splitted[1:-2]    
+
+
+        return song_name, song_url
+
+    def get_song_name_url(self, from_file=False):
+        if from_file:
+            return self._parse_song_url_from_text()
+        
+        song_list = self.get_song_list()
+        url_list = self.get_song_url()
+
+        self._store_song_name_url(song_list, url_list)
+
+        return song_list, url_list
+        
+    def _store_song_name_url(self, song_name, song_url):
+
+        with open(self.song_name_dir, "w") as f:
+            for genre in song_name.keys():
+                f.write(f"GENRE={genre}\n")
+                for song in song_name[genre]:
+                    f.write(f"{song}\n")
+                f.write("--")
+
+        with open(self.song_url_dir, "w") as f:
+            for genre in song_url.keys():
+                f.write(f"GENRE={genre}\n")
+                for song in song_url[genre]:
+                    f.write(f"{song}\n")
+                f.write("--")
 
 
     def _validate_genres(self, genres):
@@ -62,15 +137,19 @@ class APICall:
         Returns:
             str: access token
         """
-        import requests
-        import os
-        import dotenv
         import base64
+        import os
+
+        import dotenv
+        import requests
 
         # Get client id and client secret from dot env
         dotenv.load_dotenv()
         client_id = os.getenv("SPOTIFY_CLIENT_ID")
         client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
+
+        if client_id is None or client_secret is None:
+            raise ValueError("Client Id or Client Secret for Spotify not found in .env file. Use SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET as keys")
 
         # Auth token for Token Request
         auth_token = base64.b64encode(f"{client_id}:{client_secret}".encode('utf-8')).decode('ascii')
@@ -102,8 +181,9 @@ class APICall:
         if self.song_list != {}:
             return self.song_list
 
-        import requests
         import datetime
+
+        import requests
 
         current_year = datetime.datetime.now().year
 
@@ -164,13 +244,13 @@ class APICall:
             return self.song_url
 
     
-        import requests
         import os
+
+        import requests
         from dotenv import load_dotenv
 
         # Getting youtube api key from dot env
         load_dotenv()
-        auth_key = os.getenv("YOUTUBE_API_KEY")
 
         # Creating a copy 
         song_list = self.song_list
@@ -179,7 +259,13 @@ class APICall:
             song_url = []
             print(f"Getting song urls for {genre}")
             songs = song_list[genre]
-            for song in songs:
+            for i, song in enumerate(songs):
+                env_string = f"YOUTUBE_API_KEY{i%self.num_youtube_api_keys}"
+                # print(env_string)
+                auth_key = os.getenv(env_string)
+                if not auth_key:
+                    raise ValueError("Youtube API key not found. Please add it to .env file.Use YOUTUBE_API_KEY0. Alternatively, you can use multiple keys with index starting from 0 since one API key will probably no be able to handle all requests.")
+
 
                 response = requests.get(f"{self.youtube_search_base_url}?part=snippet&q={song} Lyrics&key={auth_key}")
 
@@ -214,6 +300,7 @@ class APICall:
 
 if __name__ == "__main__":
     import json
-    ac = APICall(["rock","metal"],2)
-    print(json.dumps(ac.get_song_list()))
-    print(json.dumps(ac.get_song_url()))
+    ac = APICall(["rock","metal"],100, 4)
+    song_name, song_url = ac.get_song_name_url()
+    print(json.dumps(song_name))
+    print(json.dumps(song_url))

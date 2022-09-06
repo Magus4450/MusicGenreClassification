@@ -1,13 +1,13 @@
 
 
 class SongDownloader:
-    def __init__(self):
+    def __init__(self, segment_duration=30):
         
         # Duration for each segmented clip
-        self.SEGMENT_DURATION = 20 # Seconds
+        self.SEGMENT_DURATION = segment_duration # Seconds
 
         # Get root path of the project and initialize song directory
-        self.root_path, self.song_dir_path = self._make_song_dir()
+        self.original_folder, self.segment_folder = self._make_song_dir()
 
     def _make_song_dir(self):
         """Private method to create directory to store downloaded songs in, if not already created
@@ -16,6 +16,7 @@ class SongDownloader:
             Tuple(str, str): Root path of the project and path of songs folder
         """
         import os
+
         # Project Path
         root_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -23,10 +24,27 @@ class SongDownloader:
         if not os.path.isdir(os.path.join(root_path, "songs")):
             os.mkdir(root_path + "\\songs")
 
-        # Get Path of songs folder
-        songs_folder = os.path.join(root_path, "songs")
+        root_path = os.path.join(root_path, "songs")
 
-        return root_path, songs_folder
+        orignal_folder = os.path.join(root_path, "original")
+        
+        if not os.path.isdir(orignal_folder):
+            os.mkdir(root_path + "\\original")
+        
+
+
+        # Get Path of songs segment folder
+        segment_folder_name = f"segment_{self.SEGMENT_DURATION}"
+
+        segment_folder = os.path.join(root_path, segment_folder_name)
+
+        # If Song folder not made, make it
+        if not os.path.isdir(segment_folder):
+            os.mkdir(root_path + f"\\{segment_folder_name}")
+
+
+
+        return orignal_folder, segment_folder
 
     def download_song(self, song_list, song_url):
         """Downloads songs using song_url youtube and saves them in the songs folder
@@ -36,19 +54,27 @@ class SongDownloader:
             song_list (list(str)): directory with genre as keys and list of song names as values
             song_url (list(str)): directory with genre as keys and list of song url as values
         """
-        from pytube import YouTube
         import os
+        import time
+
+        from pytube import YouTube
+
+        from progressBar import printProgressBar
+
+
 
         for genre in song_list.keys():
             songs = song_list[genre]
             urls = song_url[genre]
             count = 0
+
+            printProgressBar(0, len(songs), prefix = f'{genre} Progress:', suffix = 'Complete', length = 50)
             for song, url in zip(songs, urls):
                 count +=1
 
                 # If song is already downloaded
-                if (os.path.isfile(self.song_dir_path + "\\" + song.strip('?!@#$%^&*():;') + ".mp3")):
-                    print(f"{count}: {song} already downloaded")
+                if (os.path.isfile(self.original_folder + "\\" + song.strip('?!@#$%^&*():;') + ".mp3")):
+                    # print(f"{count}: {song} already downloaded")
                     continue
 
 
@@ -56,7 +82,7 @@ class SongDownloader:
                 # Get the audio stream
                 audio = yt.streams.filter(only_audio=True).first()
                
-                output_file = audio.download(output_path=self.song_dir_path)
+                output_file = audio.download(output_path=self.original_folder)
 
                
 
@@ -68,10 +94,12 @@ class SongDownloader:
 
                 try:
                     os.rename(output_file, new_file)
-                    print(f"{count}: {song} downloaded")
+                    # print(f"{count}: {song} downloaded")
                     self._segment_song(new_file, song, genre)
                 except FileNotFoundError:
-                    print(f"{count}: {song} couldn't be downloaded")
+                    # print(f"{count}: {song} couldn't be downloaded")
+                    pass
+                printProgressBar(count, len(songs), prefix = f'{genre} Progress:', suffix = 'Complete', length = 50)
                 
 
 
@@ -85,11 +113,11 @@ class SongDownloader:
         """
        
 
-        import subprocess
         import os
+        import subprocess
 
         # Set song directory as current directory 
-        os.chdir(self.song_dir_path)
+        os.chdir(self.segment_folder)
         
         # If file type not mp3, return
         if ".mp3" not in song_path:
@@ -97,12 +125,12 @@ class SongDownloader:
 
         # Using ffmpeg to convert mp3 into segments of 10 seconds as .mp4
         # Converting to mp3 causes Missing Headers error
-        subprocess.call(['ffmpeg', '-i', song_path, '-c', 'copy' ,'-f' ,'segment', '-segment_time', str(self.SEGMENT_DURATION) ,'-reset_timestamps' ,'1', f'{genre}_%02d_{filename}.mp4'])
+        subprocess.call(['ffmpeg', '-i', song_path, '-c', 'copy' ,'-f' ,'segment', '-segment_time', str(self.SEGMENT_DURATION) ,'-reset_timestamps' ,'1', f'{genre}_%02d_{filename}.mp4', '-loglevel', 'quiet'])
         
         # Converting all .mp4 files to .mp3
-        for filename in os.listdir(self.song_dir_path):
+        for filename in os.listdir(self.original_folder):
 
-            infilename = os.path.join(self.song_dir_path,filename)
+            infilename = os.path.join(self.segment_folder,filename)
             if not os.path.isfile(infilename):
                 continue
             oldbase = os.path.splitext(filename)
