@@ -1,0 +1,202 @@
+GENRE=rock
+I Ain't Worried
+Sweater Weather
+505
+Mr. Brightside
+She Had Me At Heads Carolina
+Mary On A Cross
+World's Smallest Violin
+Cigarette Daydreams
+Daddy Issues
+King For A Day
+Hold Me Closer
+Softcore
+Why'd You Only Call Me When You're High?
+Everybody Talks
+Tongue Tied
+Last Night Lonely
+Enemy (with JID) - from the series Arcane League of Legends
+Electric Love
+Counting Stars
+Freaks
+I Wanna Be Yours
+Seven Nation Army
+Sex, Drugs, Etc.
+Do I Wanna Know?
+The Middle
+Believer
+Bones
+She Likes It (feat. Jake Scott)
+Shut Up and Dance
+Pumped Up Kicks
+Alien Blues
+Chicken Fried
+House of Memories
+Sugar, We're Goin Down
+Brazil
+Fancy Like
+Out of My League
+You Get Me So High
+Island In The Sun
+Demons
+Stressed Out
+Sex on Fire
+Kilby Girl
+Can I Call You Tonight?
+Thunder
+Looking Out for You
+Drunk (And I Don't Wanna Go Home)
+Best Day Of My Life
+Little Dark Age
+Classic
+Crazy Train
+Bang!
+Mary Jane's Last Dance
+Chop Suey!
+I Write Sins Not Tragedies
+Thnks fr th Mmrs
+Pompeii
+Dear Maria, Count Me In
+Hey, Soul Sister
+We Are Young (feat. Janelle Mon�e)
+Are You Bored Yet? (feat. Clairo)
+Fishing In The Dark
+Where'd All the Time Go?
+Electric Feel
+Come a Little Closer
+Ain't No Rest for the Wicked
+Ride
+Can't Stop
+Sunshine
+Hey There Delilah
+Prom Queen
+The Adults Are Talking
+Somewhere Only We Know
+Paralyzer
+Beggin'
+Kryptonite
+Swim
+Centuries
+High Hopes
+Radioactive
+It's Called: Freefall
+Dirty Little Secret
+How to Save a Life
+Gives You Hell
+Cold Heart - PNAU Remix
+Stacy's Mom
+Heathens
+Hot Rod
+You're Gonna Go Far, Kid
+Cruise
+Safe And Sound
+Somebody Told Me
+Dance, Dance
+Drops of Jupiter (Tell Me)
+Natural
+Change (In the House of Flies)
+Friends
+I'm Yours
+Goodie Bag
+--GENRE=metal
+Mary On A Cross
+Chop Suey!
+In the End
+Kryptonite
+Change (In the House of Flies)
+Crazy Train
+Paralyzer
+Last Resort
+Duality
+Numb
+Can You Feel My Heart
+Toxicity
+You're Gonna Go Far, Kid
+Bring Me To Life
+Cherry Waves
+Can't Stop
+Animal I Have Become
+How You Remind Me
+Coming Undone
+Bodies
+Fake It
+Hail to the King
+Sextape
+What I've Done
+All Summer Long
+Down with the Sickness
+Popular Monster
+One Step Closer
+Headstrong
+Bad Company
+Custer
+Aerials
+Rockstar
+Addicted
+Lips Of An Angel
+The Diary of Jane - Single Version
+Dani California
+Snow (Hey Oh)
+Smooth Criminal
+Before I Forget
+Rosemary
+I Will Not Bow
+I Hate Everything About You
+The Reason
+Riot
+B.Y.O.B.
+Monster
+She Hates Me
+Bleed It Out
+It's Been Awhile
+The Drug In Me Is You
+Here Without You
+Voices In My Head
+FEEL NOTHING
+A Little Bit Off
+The Red
+Like a Stone
+You're Going Down
+Cold
+Animals
+Psychosocial
+Rollin' (Air Raid Vehicle)
+Picture (feat. Sheryl Crow)
+All Around Me
+sTraNgeRs
+Second Chance
+Crawling
+Jekyll and Hyde
+Click Click Boom
+When I'm Gone
+Crazy Bitch
+Burn It to the Ground
+Wrong Side of Heaven
+I Stand Alone
+Happy?
+Porn Star Dancing
+Never Too Late
+Rx (Medicate)
+Stricken
+The Pretender
+ZOMBIFIED
+The Devil in I
+I Hate Everything About You
+Master of Puppets
+Faint
+Papercut
+Bad Girlfriend
+Nightmare
+The Downfall Of Us All
+Remedy
+I'm So Sick
+My Way
+You And Me
+Lonely Day
+Always
+It's My Life
+Another Life
+Undead
+Unsainted
+Wish You Were Here
+--
