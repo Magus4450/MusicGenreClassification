@@ -9,7 +9,16 @@ import pandas as pd
 class FeatureExtractor():
 
     def __init__(self, segment_duration=30, n_threads=10, frame_size = 1024, hop_length = 512, split_frequency = 2000):
+        """
 
+        Args:
+            segment_duration (int, optional): Dataset to be used. Uses segmented into `segment_duration` seconds. Defaults to 30.
+            n_threads (int, optional): number of threads to use. Defaults to 10.
+            frame_size (int, optional): .Defaults to 1024.
+            hop_length (int, optional): Defaults to 512.
+            split_frequency (int, optional): Split frequency for Band Energy Ratio. Defaults to 2000.
+        """
+        
         self.root_dir, self.song_dir = self._get_song_dir(segment_duration)
         self.features = self._create_feature_list()
         self.n_threads = n_threads
@@ -27,7 +36,7 @@ class FeatureExtractor():
             segment_duration (int): Duration of segmented song. Dataset of this duration of segmented song will be used
 
         Returns:
-            str: song directory path
+            (str, str): root directory path and song directory path
         """
         relative_song_Dir = f"Song Collection\\songs\\segment_{segment_duration}"
         root_dir = os.path.dirname(os.path.realpath(__file__)).replace("\\Feature Extraction", "")
@@ -68,11 +77,27 @@ class FeatureExtractor():
         return pd.DataFrame(columns=self.features)
         
     def _amplitude_envelope(self, signal):
+        """Calculates amplitude evnelope of a signal
+
+        Args:
+            signal (numpy array): audio signal
+
+        Returns:
+            numpy array: amplitude envelope
+        """
         return np.array([max(signal[i:i+self.frame_size]) for i in range(0, len(signal), self.hop_length)])
 
 
     def _calculate_split_frequency_bins(self, spectrogram, sr):
-        
+        """Calculated split frequency bins for Band Energy Ratio
+
+        Args:
+            spectrogram (Numpy array of complex numbers): Spectrogram of the signal
+            sr (int): Sampling Rate
+
+        Returns:
+            int: Split Frequency Bin
+        """
         frequency_range = sr / 2
         frequency_delta_per_bin = frequency_range / spectrogram.shape[0]
         split_frequency_bin = np.floor(self.split_frequency / frequency_delta_per_bin)
@@ -81,6 +106,15 @@ class FeatureExtractor():
 
 
     def _calculate_band_enery_ratio(self, spectrogram, sr):
+        """Calculates Band Energy Ratio
+
+        Args:
+            spectrogram (Numpy array of complex numbers): Spectrogram
+            sr (int): Sampling Rate
+
+        Returns:
+            Numpy array: Band Energy Ratio
+        """
         split_frequency_bin = self._calculate_split_frequency_bins(spectrogram,  sr)
 
         # Move to the power spectrogram
@@ -97,18 +131,23 @@ class FeatureExtractor():
         return BER
 
     def _get_song_list(self):
+        """Returns list of songs in the song directory
+
+        Returns:
+            Numpy Array: list of songs
+        """
         return np.array(os.listdir(self.song_dir))
     
     def _dump_data(self):
+        """Dumps data into a csv file
+        """
         self.data.to_csv(os.path.join(self.root_dir, 'data.csv'))
 
     def extract_features(self):
+        """Extract features and stores it into a DataFrame and dumps it into a csv file. Used multithreading to speed up the process
+        """
         song_list = self._get_song_list()
         self.total = len(song_list)
-
-        # for song_name in song_list:
-        #     self._extract_features_per_sample(song_name)
-
 
         with ThreadPoolExecutor(max_workers=self.n_threads) as thread:
             thread.map(self._extract_features_per_sample, song_list)
@@ -116,6 +155,11 @@ class FeatureExtractor():
         self._dump_data()
 
     def _extract_features_per_sample(self, song_name):
+        """Extracts features for a single song and appends it to the DataFrame
+
+        Args:
+            song_name (str): Song Name
+        """
         splitted_name = song_name.split("_")
         genre = splitted_name[0]
         name = " ".join(splitted_name[1:])
@@ -134,7 +178,6 @@ class FeatureExtractor():
         MFCCs = librosa.feature.mfcc(signal, n_mfcc=13, sr=sr) # -> (13, bins)
 
         row_data = pd.Series([name, genre, AE.mean(), AE.std(), RMS.mean(), RMS.std(), ZCR.mean(), ZCR.std(), BER.mean(), BER.std(), SC.mean(), SC.std(), BW.mean(), BW.std(), MFCCs[0].mean(), MFCCs[0].std(), MFCCs[1].mean(), MFCCs[1].std(), MFCCs[2].mean(), MFCCs[2].std(), MFCCs[3].mean(), MFCCs[3].std(), MFCCs[4].mean(), MFCCs[4].std(), MFCCs[5].mean(), MFCCs[5].std(), MFCCs[6].mean(), MFCCs[6].std(), MFCCs[7].mean(), MFCCs[7].std(), MFCCs[8].mean(), MFCCs[8].std(), MFCCs[9].mean(), MFCCs[9].std(), MFCCs[10].mean(), MFCCs[10].std(), MFCCs[11].mean(), MFCCs[11].std(), MFCCs[12].mean(), MFCCs[12].std()], index=self.features)
-        # print("row_data --> ", row_data)
         self.data = pd.concat([self.data, row_data.to_frame().T], ignore_index=True)
 
     
