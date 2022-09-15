@@ -1,3 +1,7 @@
+from os import system
+from xml.dom import ValidationErr
+
+
 class APICall:
 
     def __init__(self, genres, amount_each, num_youtube_api_keys=1):
@@ -18,12 +22,9 @@ class APICall:
         # Number of API Key used
         self.num_youtube_api_keys = num_youtube_api_keys
 
-        # Dictionary of genres and their songs name
+        self.song_name_dir= self._make_song_list_url_dir()
+
         self.song_list = {}
-        # Dictionary of genres and their songs url
-        self.song_url = {}
-        
-        self.song_name_dir, self.song_url_dir = self._make_song_list_url_dir()
 
     def _make_song_list_url_dir(self):
         """Makes directory for song list and song url
@@ -39,66 +40,56 @@ class APICall:
         SONG_LIST_DIR = os.path.join(BASE_DIR, "Song List")
 
         SONG_NAME_LIST_PATH = os.path.join(SONG_LIST_DIR, "name_list.txt")
-        SONG_URL_LIST_PATH = os.path.join(SONG_LIST_DIR, "url_list.txt")
 
-        return SONG_NAME_LIST_PATH, SONG_URL_LIST_PATH
+        return SONG_NAME_LIST_PATH
     
-    def _parse_song_url_from_text(self):
-        """Parses song name and url from text files
+    def get_song_name_url(self):
+        """Parses song name and url from text file and returns it
 
         Returns:
             (dict, dict): dict of song name and url with genre as keys
         """
+
+        # Dict to store song name and url
         song_name = {}
         song_url = {}
 
         with open(self.song_name_dir, "r") as f:
             text = f.read()
-        genre_list = text.split("--")
+
+        # Seperate into lists by genre with first item being `GENRE=<genre>`
+        genre_list = text.split("----")
+        if "\n" in genre_list:
+            genre_list.remove("\n") # Last contains empty string
+
+        # Last item of genre_list contains empty string
+        for genre in genre_list:
+
+            split = genre.split("\n")
+            split.remove('')
+
+            songs = split[1:]
+            genre_name = split[0].split("=")[1]
+
+            if '' in songs:
+                songs.remove('')
+
+            genre_song_list = []
+            genre_songs_url = []
+
+            for song in songs:
+                if song == '':
+                    continue
+                name, url = song.split("->")
+
+                genre_song_list.append(name)
+                genre_songs_url.append(url)
+
+            song_name[genre_name] = genre_song_list
+            song_url[genre_name] = genre_songs_url
         
-        for genre in genre_list[:-1]:
-            splitted = genre.split("\n")
-            genre_name = splitted[0].replace("GENRE=", "")
-            song_name[genre_name] = splitted[1:-2]   
-
-        with open(self.song_url_dir, "r") as f:
-            text = f.read()
-        genre_list = text.split("--")
-        
-        for genre in genre_list[:-1]:
-            splitted = genre.split("\n")
-            genre_name = splitted[0].replace("GENRE=", "")
-            song_url[genre_name] = splitted[1:-2]    
-
-
         return song_name, song_url
 
-    def get_song_name_url(self, from_file=False):
-        if from_file:
-            return self._parse_song_url_from_text()
-        
-        song_list = self.get_song_list()
-        url_list = self.get_song_url()
-
-        self._store_song_name_url(song_list, url_list)
-
-        return song_list, url_list
-        
-    def _store_song_name_url(self, song_name, song_url):
-
-        with open(self.song_name_dir, "w") as f:
-            for genre in song_name.keys():
-                f.write(f"GENRE={genre}\n")
-                for song in song_name[genre]:
-                    f.write(f"{song}\n")
-                f.write("--")
-
-        with open(self.song_url_dir, "w") as f:
-            for genre in song_url.keys():
-                f.write(f"GENRE={genre}\n")
-                for song in song_url[genre]:
-                    f.write(f"{song}\n")
-                f.write("--")
 
 
     def _validate_genres(self, genres):
@@ -167,9 +158,24 @@ class APICall:
 
         return auth_token
 
+    def _store_song_name(self, song_name):
+        """
+        Stores song name in text file
+        
+        Args:
+            song_name (str): song name
+        """
 
-    def get_song_list(self):
-        """Generated a dictionary of song_list with genre as key and list of song names as values
+
+        with open(self.song_name_dir, "w") as f:
+            for genre in song_name.keys():
+                f.write(f"GENRE={genre}\n")
+                for song in song_name[genre]:
+                    f.write(f"{song}\n")
+                f.write("----\n")
+
+    def generate_song_list(self):
+        """Generates a dictionary of song names as value and genre as key by pulling values from Spotify API and stores them in a file
 
         Raises:
             ValueError: If the response doesn't send OK 200 status code
@@ -177,14 +183,9 @@ class APICall:
         Returns:
             dictionary: genre as key and list of song names as values
         """
-        # If there is already a song list
-        if self.song_list != {}:
-            return self.song_list
-
         import datetime
 
         import requests
-
         current_year = datetime.datetime.now().year
 
 
@@ -222,11 +223,12 @@ class APICall:
             self.song_list[genre] = song_list
             print(f"Got {len(song_list)} song names for {genre}\n{'-'*50}")
         
-        return self.song_list
+        self._store_song_name(self.song_list)
+        
     
 
-    def get_song_url(self):
-        """Generated a dictionary of song_list with genre as key and list of song url as values
+    def generate_song_url(self):
+        """Generates a dictionary of song urls as value and genre as key by pulling values from Youtube API and stores them in a file
 
         Raises:
             ValueError: If the response doesn't send OK 200 status code
@@ -235,15 +237,8 @@ class APICall:
             dictionary: genre as key and list of song names as values
         """
 
-        # If song_list not generated, create it
-        if self.song_list == {}:
-            self.get_song_list()
-        
-        # If song_url already created, return it
-        if self.song_url != {}:
-            return self.song_url
-
-    
+        tokens_exhausted = 0
+        current_token = 0
         import os
 
         import requests
@@ -252,55 +247,92 @@ class APICall:
         # Getting youtube api key from dot env
         load_dotenv()
 
-        # Creating a copy 
-        song_list = self.song_list
+    
         
-        for genre in song_list.keys():
-            song_url = []
-            print(f"Getting song urls for {genre}")
-            songs = song_list[genre]
-            for i, song in enumerate(songs):
-                env_string = f"YOUTUBE_API_KEY{i%self.num_youtube_api_keys}"
-                # print(env_string)
-                auth_key = os.getenv(env_string)
-                if not auth_key:
-                    raise ValueError("Youtube API key not found. Please add it to .env file.Use YOUTUBE_API_KEY0. Alternatively, you can use multiple keys with index starting from 0 since one API key will probably no be able to handle all requests.")
+
+        with open(self.song_name_dir, "r") as f:
+            text_data = f.read()
+
+        genre_list = text_data.split("----")
+        if "\n" in genre_list:
+            genre_list.remove("\n") # Last contains empty string
+        with open(self.song_name_dir, 'w') as o:
+            for genre in genre_list:
+                split = genre.split("\n")
+                if '' in split:
+                    split.remove('')
+                songs = split[1:]
+
+                genre_name = split[0]
+                if tokens_exhausted < self.num_youtube_api_keys:
+                    print(f"Fetching URLs for {genre_name.capitalize()}")
+                o.write(f"{genre_name}\n")
+
+                length = len(songs)
+                i = 0
+                while i < length:
+                    if tokens_exhausted == self.num_youtube_api_keys:
+                        print("All youtube api keys exhausted. Please add more youtube api keys to .env file")
+                        o.write(f"{songs[i]}\n")
+                        tokens_exhausted +=1
+                        i+=1
+                        if i == len(songs):
+                            o.write(f"----\n")
+                        continue
+                    elif tokens_exhausted > self.num_youtube_api_keys:
+                        if songs[i] != '':
+                            o.write(f"{songs[i]}\n")
+                        i+=1
+                        if i == len(songs):
+                            o.write(f"----\n")
+                        continue
+
+                    if "->" in songs[i]:
+                        print(f"{i:3.0f}:{len(songs):3.0f} URL already fetched for {songs[i].split('->')[0]}")
+                        o.write(f"{songs[i]}\n")
+                    else:
+                        try:
+                            env_string = f"YOUTUBE_API_KEY{current_token}"
+                            auth_key = os.getenv(env_string)
+                            if not auth_key:
+                                raise ValidationErr("Youtube API key not found. Please add it to .env file.Use YOUTUBE_API_KEY0. Alternatively, you can use multiple keys with index starting from 0 since one API key will probably no be able to handle all requests.")
+                            response = requests.get(f"{self.youtube_search_base_url}?part=snippet&q={songs[i]} Lyrics&key={auth_key}")
 
 
-                response = requests.get(f"{self.youtube_search_base_url}?part=snippet&q={song} Lyrics&key={auth_key}")
 
-                if response.status_code != 200:
-                    print(response.json())
-                    raise ValueError(f"Error fetching song names for {genre}.\nStatus code: {response.status_code}")
+                            if response.status_code != 200:
+                                print(f"Token {current_token} exhausted. Trying next token")
+                                tokens_exhausted += 1
+                                current_token += 1
+                                continue
 
 
-                # items[0] > id > videoId
-                j = response.json()
+                            # items[0] > id > videoId  
+                            j = response.json()
+                            item = j["items"][0]
+                            video_id = item["id"]["videoId"]
+                            video_url = f"{self.youtube_video_base_url}{video_id}"
 
-                # If url accessible
-                try:
-                    item = j["items"][0]
-                    video_id = item["id"]["videoId"]
-                    video_url = f"{self.youtube_video_base_url}{video_id}"
-                    song_url.append(video_url)
-                # If url not accessible
-                except KeyError:
-                    print(f"Couldn't fetch song url of {song}")
-                    songs.remove(song)
-                    self.song_list[genre] = songs
-                    continue
-                    
-                
-            print(f"Got {len(song_url)} song urls for {genre}\n{'-'*50}")
-            self.song_url[genre] = song_url
-        return self.song_url
+
+                            o.write(f"{songs[i]}->{video_url}\n")
+                            print(f"{i:3.0f}:{len(songs):3.0f} Fetched song url of {songs[i]}")
+
+                        except KeyError:
+                            print(f"{i:3.0f}:{len(songs):3.0f} Couldn't fetch song url of {songs[i]}")
+                            # o.write(f"{song}\n")
+                        except ValidationErr:
+                            break
+                        except:
+                            print(f"{i:3.0f}:{len(songs):3.0f} Couldn't fetch song url of {songs[i]}")
+                            # o.write(f"{song}\n")
+                    i += 1
+                    if i == len(songs):
+                        o.write(f"----\n")
 
 
 
 
 if __name__ == "__main__":
-    import json
-    ac = APICall(["rock","metal"],100, 4)
-    song_name, song_url = ac.get_song_name_url()
-    print(json.dumps(song_name))
-    print(json.dumps(song_url))
+    ac = APICall(["rock","metal", "hip-hop"],50, 1)
+    song_list = ac.generate_song_list()
+    song_url = ac.generate_song_url()
