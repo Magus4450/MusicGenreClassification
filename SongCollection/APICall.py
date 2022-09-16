@@ -1,5 +1,6 @@
-from os import system
-from xml.dom import ValidationErr
+import os
+
+import requests
 
 
 class APICall:
@@ -38,7 +39,6 @@ class APICall:
         Returns:
             (str): path of file to store song list and url
         """
-        import os
         BASE_DIR = os.path.dirname(os.path.realpath(__file__))
         if not os.path.isdir(os.path.join(BASE_DIR, "Song List")):
             os.mkdir(BASE_DIR + "\\Song List")
@@ -110,7 +110,6 @@ class APICall:
         Returns:
             list(str): validated_genres
         """
-        import requests
 
         # Generate auth token
         auth_token = self._get_spotify_access_token()
@@ -135,10 +134,8 @@ class APICall:
             str: access token
         """
         import base64
-        import os
 
         import dotenv
-        import requests
 
         # Get client id and client secret from dot env
         dotenv.load_dotenv()
@@ -191,7 +188,6 @@ class APICall:
         """
         import datetime
 
-        import requests
         current_year = datetime.datetime.now().year
 
 
@@ -245,9 +241,7 @@ class APICall:
 
         tokens_exhausted = 0
         current_token = 0
-        import os
 
-        import requests
         from dotenv import load_dotenv
 
         # Getting youtube api key from dot env
@@ -341,8 +335,6 @@ class APICall:
 
                             print(f"{i:3.0f}:{len(songs):3.0f} Fetched song url of {songs[i]}")
 
-                        except ValidationErr:
-                            break
                         except:
                             print(f"{i:3.0f}:{len(songs):3.0f} Couldn't fetch song url of {songs[i]}")
                            
