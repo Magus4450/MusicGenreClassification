@@ -14,6 +14,8 @@ Data in collected in a four step process.
 1. Install required libraries
     - [FFMPEG](https://ffmpeg.org/) (*Add to path*)
     - [PyTube](https://pytube.io/en/latest/)
+    - [PythonDotEnv](https://pypi.org/project/python-dotenv/)
+    - [Requests](https://pypi.org/project/requests/)
 2. Acquire required API Keys (*Store all acquired Keys in SongCollection/.env*)
     1. Spotify API Keys
         - Login to [SpotifyDev](https://developer.spotify.com/dashboard)
