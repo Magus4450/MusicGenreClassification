@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from pytube import YouTube
 
-from ..ProgressBar.progressBar import printProgressBar
+from progressBar import printProgressBar
 
 
 class SongDownloader:

@@ -1,5 +1,7 @@
 import os
+import warnings
 from concurrent.futures import ThreadPoolExecutor
+from logging import warning
 
 import librosa
 import numpy as np
@@ -7,7 +9,7 @@ import pandas as pd
 
 from ..ProgressBar.progressBar import printProgressBar
 
-
+warnings.filterwarnings('ignore')
 class FeatureExtractor():
 
     def __init__(self, segment_duration=30, n_threads=10, frame_size = 1024, hop_length = 512, split_frequency = 2000):
@@ -44,7 +46,7 @@ class FeatureExtractor():
             (str, str): root directory path and song directory path
         """
         relative_song_Dir = f"SongCollection\\songs\\segment_{segment_duration}"
-        root_dir = os.path.dirname(os.path.realpath(__file__)).replace("\\Feature Extraction", "")
+        root_dir = os.path.dirname(os.path.realpath(__file__)).replace("\\FeatureExtraction", "")
         song_dir = os.path.join(root_dir, relative_song_Dir)
 
         return root_dir, song_dir
