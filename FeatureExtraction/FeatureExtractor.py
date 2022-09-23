@@ -1,13 +1,12 @@
 import os
 import warnings
 from concurrent.futures import ThreadPoolExecutor
-from logging import warning
 
 import librosa
 import numpy as np
 import pandas as pd
 
-from ..ProgressBar.progressBar import printProgressBar
+from progressBar import printProgressBar
 
 warnings.filterwarnings('ignore')
 class FeatureExtractor():

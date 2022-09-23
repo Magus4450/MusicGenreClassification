@@ -1,6 +1,16 @@
 # Music Genre Classification
 This is a repository for Music Genre Classification Project which includes Data Collection, Feature Extraction, Training and Deployment.
 
+## **Virtual Environment**
+
+With virtual environment, you can easily install all requirements in one go. To do so, follow these steps:
+
+1. Create a virtual environment <br> ```python -m venv env``` 
+2. Activate the virtual environment <br> **Windows:** ```./env/Scripts/activate``` <br> **Linux:** ```source env/bin/actiavte``` 
+3. Install requirements <br> ```pip install -r requirements.txt```
+
+
+
 ## **1. Data Collection**
 
 Data in collected in a four step process.
@@ -14,6 +24,8 @@ Data in collected in a four step process.
 1. Install required libraries
     - [FFMPEG](https://ffmpeg.org/) (*Add to path*)
     - [PyTube](https://pytube.io/en/latest/)
+    - [PythonDotEnv](https://pypi.org/project/python-dotenv/)
+    - [Requests](https://pypi.org/project/requests/)
 2. Acquire required API Keys (*Store all acquired Keys in SongCollection/.env*)
     1. Spotify API Keys
         - Login to [SpotifyDev](https://developer.spotify.com/dashboard)
@@ -68,7 +80,13 @@ Extracted features are Mean and Standard Deviations of:
 ---
 ## **3. Training**
 
-*In Progress*
+In this part, I have dome some preliminary exploratory data analysis along with visualization of different features that has been extracted .
+
+The data was trained on different models with primary evalulation metrics being the F1 Score and Confusion Matrix. The data being highly imbalanced, balancing techniques like UnderSampling and OverSampling were used. Random Search was also employed to find best hyperparameters for the model.
+
+The best model was a RandomForestClassifer with test F1 Score of 70%. This model was trained by dropping BER_Mean and BER_Std columns as these data had multiple discrepancies. 
+
+The model was extracted into a file by pickle to be used in deployment.
 
 ---
 ## **4. Deployment**
